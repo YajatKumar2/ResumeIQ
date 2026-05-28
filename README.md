@@ -27,6 +27,10 @@ backend/
     main.py            # FastAPI app
   tests/
     test_analyzer.py
+frontend/
+  src/
+    App.tsx          # Upload flow and analysis dashboard
+    api.ts           # Backend API client
 samples/
   sample_resume.txt
   sample_job_description.txt
@@ -71,4 +75,18 @@ Open the API docs at:
 
 ```text
 http://127.0.0.1:8000/docs
+```
+
+Start the frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the app at:
+
+```text
+http://127.0.0.1:5173
 ```
