@@ -59,3 +59,44 @@ def test_analyze_text_endpoint_rejects_empty_input():
     )
 
     assert response.status_code == 400
+
+
+def test_analyze_upload_accepts_txt_resume():
+    response = client.post(
+        "/analyze-upload",
+        data={
+            "job_description": "Python developer role requiring Python, SQL, Git, and REST API skills."
+        },
+        files={
+            "resume": (
+                "resume.txt",
+                b"Alex\nalex@example.com\nSkills\nPython, SQL, Git\nProjects\nBuilt a REST API.",
+                "text/plain",
+            )
+        },
+    )
+
+    body = response.json()
+
+    assert response.status_code == 200
+    assert "python" in body["matched_skills"]
+
+
+def test_analyze_upload_rejects_empty_job_description():
+    response = client.post(
+        "/analyze-upload",
+        data={"job_description": ""},
+        files={"resume": ("resume.txt", b"Python resume", "text/plain")},
+    )
+
+    assert response.status_code == 400
+
+
+def test_analyze_upload_rejects_large_file():
+    response = client.post(
+        "/analyze-upload",
+        data={"job_description": "Python developer role."},
+        files={"resume": ("resume.txt", b"x" * (5 * 1024 * 1024 + 1), "text/plain")},
+    )
+
+    assert response.status_code == 413

@@ -5,7 +5,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.core.analyzer import analyze_resume
-from backend.app.core.parser import SUPPORTED_EXTENSIONS, extract_text_from_file
+from backend.app.core.parser import MAX_UPLOAD_SIZE_BYTES, SUPPORTED_EXTENSIONS, extract_text_from_file
 from backend.app.core.schemas import AnalysisResult, TextAnalysisRequest
 
 
@@ -40,8 +40,11 @@ def analyze_text(payload: TextAnalysisRequest) -> AnalysisResult:
 @app.post("/analyze-upload", response_model=AnalysisResult)
 async def analyze_upload(
     resume: UploadFile = File(...),
-    job_description: str = Form(...),
+    job_description: str = Form(""),
 ) -> AnalysisResult:
+    if not job_description.strip():
+        raise HTTPException(status_code=400, detail="Job description is required.")
+
     extension = Path(resume.filename or "").suffix.lower()
     if extension not in SUPPORTED_EXTENSIONS:
         allowed = ", ".join(sorted(SUPPORTED_EXTENSIONS))
@@ -50,11 +53,16 @@ async def analyze_upload(
     contents = await resume.read()
     if not contents:
         raise HTTPException(status_code=400, detail="Uploaded resume file is empty.")
+    if len(contents) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="Resume file is too large. Maximum size is 5 MB.")
 
     with NamedTemporaryFile(delete=True, suffix=extension) as temp_file:
         temp_file.write(contents)
         temp_file.flush()
-        resume_text = extract_text_from_file(Path(temp_file.name))
+        try:
+            resume_text = extract_text_from_file(Path(temp_file.name))
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     if not resume_text.strip():
         raise HTTPException(status_code=400, detail="Could not extract readable text from resume.")

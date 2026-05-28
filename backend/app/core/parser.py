@@ -2,6 +2,7 @@ from pathlib import Path
 
 
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024
 
 
 def extract_text_from_file(path: Path) -> str:
@@ -26,8 +27,12 @@ def _extract_pdf_text(path: Path) -> str:
     except ImportError as exc:
         raise RuntimeError("Install pypdf to parse PDF resumes.") from exc
 
-    reader = PdfReader(str(path))
-    pages = [page.extract_text() or "" for page in reader.pages]
+    try:
+        reader = PdfReader(str(path))
+        pages = [page.extract_text() or "" for page in reader.pages]
+    except Exception as exc:
+        raise ValueError("Could not read PDF text. Try uploading a text-based PDF.") from exc
+
     return "\n".join(pages)
 
 
@@ -37,6 +42,10 @@ def _extract_docx_text(path: Path) -> str:
     except ImportError as exc:
         raise RuntimeError("Install python-docx to parse DOCX resumes.") from exc
 
-    document = Document(str(path))
-    paragraphs = [paragraph.text for paragraph in document.paragraphs]
+    try:
+        document = Document(str(path))
+        paragraphs = [paragraph.text for paragraph in document.paragraphs]
+    except Exception as exc:
+        raise ValueError("Could not read DOCX text. Check that the file is a valid .docx document.") from exc
+
     return "\n".join(paragraphs)
