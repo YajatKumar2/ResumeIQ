@@ -1,0 +1,20 @@
+[
+  {
+    "name": "strong_data_analyst_match",
+    "expected_band": "strong",
+    "resume_text": "Maya Rao\nmaya.rao@example.com\n\nSummary\nData analyst with experience using Python, SQL, Pandas, Excel, Tableau, and Power BI to build business reporting dashboards.\n\nSkills\nPython, SQL, Pandas, NumPy, Excel, Tableau, Power BI, Data Analysis, Data Visualization, Statistics, Git\n\nExperience\nData Analyst Intern\nBuilt weekly sales dashboards in Tableau and Power BI for 15 business users. Automated SQL reports and cleaned 50,000 records using Python and Pandas, reducing manual reporting time by 35%.\n\nProjects\nCustomer Churn Analysis\nDeveloped a machine learning model in Python using scikit-learn and explained insights to non-technical stakeholders.\n\nEducation\nB.Tech Computer Science",
+    "job_description": "We need a Junior Data Analyst with Python, SQL, Excel, Pandas, data visualization, and dashboard reporting experience. Responsibilities include cleaning datasets, analyzing business trends, preparing reports, and explaining insights to stakeholders. Preferred skills include Tableau, Power BI, machine learning, and communication."
+  },
+  {
+    "name": "medium_frontend_match",
+    "expected_band": "moderate",
+    "resume_text": "Arjun Mehta\narjun@example.com\n\nSummary\nComputer science student focused on frontend development and web projects.\n\nSkills\nHTML, CSS, JavaScript, Git, Firebase\n\nProjects\nPortfolio Website\nBuilt a responsive portfolio website with HTML, CSS, and JavaScript.\n\nTask Tracker App\nCreated a simple task tracker and stored user tasks with Firebase.\n\nEducation\nB.Tech Information Technology",
+    "job_description": "We need a frontend developer with React, JavaScript, HTML, CSS, Git, and responsive design. The role will build reusable UI components, integrate REST APIs, and collaborate with designers. Preferred skills include TypeScript, UI design, and testing."
+  },
+  {
+    "name": "weak_role_mismatch",
+    "expected_band": "developing",
+    "resume_text": "Ravi Singh\nravi@example.com\n\nSummary\nMechanical engineering student interested in manufacturing and CAD design.\n\nSkills\nAutoCAD, SolidWorks, Excel, Leadership\n\nProjects\nDesigned a gearbox model in SolidWorks and presented the manufacturing process.\n\nEducation\nB.Tech Mechanical Engineering",
+    "job_description": "Backend developer role requiring Python, FastAPI, SQL, database design, REST API development, Docker, Git, and Linux. Responsibilities include building APIs, maintaining databases, writing tests, and deploying services."
+  }
+]

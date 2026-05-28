@@ -1,0 +1,18 @@
+Alex Kumar
+alex.kumar@example.com
+
+Summary
+Data analyst and computer science student with hands-on experience building Python dashboards, SQL reports, and data cleaning workflows.
+
+Skills
+Python, SQL, Pandas, NumPy, Excel, Git, Data Analysis
+
+Projects
+Sales Insights Dashboard
+Built a sales analytics dashboard using Python, Pandas, and Excel to clean and analyze 20,000 transaction records. Improved reporting speed by 30% and created clear charts for business trends.
+
+Student Performance Analysis
+Developed a machine learning project using Python and scikit-learn to predict student performance from academic and attendance data.
+
+Education
+B.Tech in Computer Science
