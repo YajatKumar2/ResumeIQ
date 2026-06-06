@@ -7,9 +7,10 @@ import {
   FileText,
   Gauge,
   Loader2,
+  RefreshCcw,
   Upload,
 } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useMemo, useRef, useState } from "react";
 import { analyzeUpload } from "./api";
 import type { AnalysisResult } from "./types";
 
@@ -21,12 +22,25 @@ const scoreItems = [
   ["ats", "ATS"],
 ] as const;
 
+const maxFileSizeBytes = 5 * 1024 * 1024;
+const supportedExtensions = [".pdf", ".docx", ".txt"];
+const sampleJobDescription = `We are hiring a Junior Data Analyst to support business reporting and data-driven decision-making. The ideal candidate should have strong skills in Python, SQL, Excel, and Pandas, with experience cleaning datasets, analyzing trends, and preparing reports or dashboards.
+
+Responsibilities include collecting and cleaning data, writing SQL queries, building dashboards, identifying business insights, and explaining findings to non-technical stakeholders.
+
+Required skills:
+Python, SQL, Excel, Pandas, data analysis, data visualization, problem solving
+
+Preferred skills:
+Tableau, Power BI, machine learning, statistics, communication, Git`;
+
 export function App() {
   const [resume, setResume] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const canAnalyze = Boolean(resume && jobDescription.trim() && !isLoading);
 
@@ -34,6 +48,10 @@ export function App() {
     event.preventDefault();
     if (!resume) {
       setError("Upload a resume file before analyzing.");
+      return;
+    }
+    if (!jobDescription.trim()) {
+      setError("Paste a target job description before analyzing.");
       return;
     }
 
@@ -48,6 +66,43 @@ export function App() {
       setError(caughtError instanceof Error ? caughtError.message : "Resume analysis failed.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+    setError("");
+
+    if (!file) {
+      setResume(null);
+      return;
+    }
+
+    const extension = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
+    if (!supportedExtensions.includes(extension)) {
+      setResume(null);
+      event.target.value = "";
+      setError("Use a PDF, DOCX, or TXT resume file.");
+      return;
+    }
+
+    if (file.size > maxFileSizeBytes) {
+      setResume(null);
+      event.target.value = "";
+      setError("Resume file is too large. Maximum size is 5 MB.");
+      return;
+    }
+
+    setResume(file);
+  }
+
+  function handleReset() {
+    setResume(null);
+    setJobDescription("");
+    setAnalysis(null);
+    setError("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   }
 
@@ -70,11 +125,20 @@ export function App() {
         </div>
 
         <form className="analysis-form" onSubmit={handleSubmit}>
+          <div className="form-header">
+            <span>Input</span>
+            <button className="ghost-button" onClick={handleReset} type="button">
+              <RefreshCcw size={16} />
+              Reset
+            </button>
+          </div>
+
           <label className="upload-zone">
             <input
               accept=".pdf,.docx,.txt"
+              ref={fileInputRef}
               type="file"
-              onChange={(event) => setResume(event.target.files?.[0] ?? null)}
+              onChange={handleFileChange}
             />
             <Upload size={24} />
             <span>Upload Resume</span>
@@ -82,7 +146,16 @@ export function App() {
           </label>
 
           <label className="job-input">
-            <span>Job Description</span>
+            <span>
+              Job Description
+              <button
+                className="text-button"
+                onClick={() => setJobDescription(sampleJobDescription)}
+                type="button"
+              >
+                Use sample
+              </button>
+            </span>
             <textarea
               value={jobDescription}
               onChange={(event) => setJobDescription(event.target.value)}
@@ -105,18 +178,22 @@ export function App() {
       </section>
 
       <section className="results-area">
-        {analysis ? <Results analysis={analysis} /> : <EmptyState />}
+        {analysis ? <Results analysis={analysis} /> : <EmptyState hasInput={Boolean(resume || jobDescription)} />}
       </section>
     </main>
   );
 }
 
-function EmptyState() {
+function EmptyState({ hasInput }: { hasInput: boolean }) {
   return (
     <div className="empty-state">
       <ClipboardCheck size={40} />
-      <h2>Analysis results will appear here</h2>
-      <p>Upload a resume and paste a job description to generate the first match report.</p>
+      <h2>{hasInput ? "Ready when your inputs are complete" : "Analysis results will appear here"}</h2>
+      <p>
+        {hasInput
+          ? "Upload a supported resume and add a job description, then run the analysis."
+          : "Upload a resume and paste a job description to generate the first match report."}
+      </p>
     </div>
   );
 }
@@ -156,10 +233,19 @@ function Results({ analysis }: { analysis: AnalysisResult }) {
         />
       </Panel>
 
+      <Panel icon={<Gauge size={20} />} title="Priority Gaps">
+        <TagList
+          items={analysis.priority_missing_skills}
+          emptyText="No required-skill gaps detected."
+          tone="critical"
+        />
+      </Panel>
+
       <Panel icon={<BriefcaseBusiness size={20} />} title="Job Profile">
         <div className="stacked-list">
           <ListBlock title="Required" items={analysis.job_profile.required_skills} />
           <ListBlock title="Preferred" items={analysis.job_profile.preferred_skills} />
+          <ListBlock title="Responsibilities" items={analysis.job_profile.responsibilities} />
         </div>
       </Panel>
 
@@ -172,6 +258,15 @@ function Results({ analysis }: { analysis: AnalysisResult }) {
             </li>
           ))}
         </ul>
+      </Panel>
+
+      <Panel icon={<FileText size={20} />} title="Analysis Evidence">
+        <div className="stacked-list">
+          <ListBlock title="Score reasoning" items={analysis.evidence.score_factors} />
+          <ListBlock title="Resume signals" items={analysis.evidence.resume_evidence} />
+          <ListBlock title="Job description signals" items={analysis.evidence.job_evidence} />
+          <ListBlock title="Suggestion sources" items={analysis.evidence.recommendation_sources} />
+        </div>
       </Panel>
 
       <Panel icon={<Gauge size={20} />} title="ATS Readiness">
@@ -224,7 +319,7 @@ function TagList({
 }: {
   emptyText: string;
   items: string[];
-  tone: "good" | "warning";
+  tone: "critical" | "good" | "warning";
 }) {
   if (!items.length) return <p className="muted">{emptyText}</p>;
 

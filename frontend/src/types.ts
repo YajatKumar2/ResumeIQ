@@ -19,10 +19,18 @@ export type AtsCheck = {
   warnings: string[];
 };
 
+export type AnalysisEvidence = {
+  score_factors: string[];
+  resume_evidence: string[];
+  job_evidence: string[];
+  recommendation_sources: string[];
+};
+
 export type AnalysisResult = {
   summary: string;
   scores: ScoreBreakdown;
   job_profile: JobProfile;
+  evidence: AnalysisEvidence;
   matched_skills: string[];
   missing_skills: string[];
   priority_missing_skills: string[];

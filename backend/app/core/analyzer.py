@@ -4,7 +4,13 @@ import math
 import re
 from collections import Counter
 
-from backend.app.core.schemas import AnalysisResult, AtsCheck, JobProfile, ScoreBreakdown
+from backend.app.core.schemas import (
+    AnalysisEvidence,
+    AnalysisResult,
+    AtsCheck,
+    JobProfile,
+    ScoreBreakdown,
+)
 from backend.app.data.skills import ACTION_VERBS, SECTION_HEADERS, SKILL_ALIASES, STOPWORDS
 
 
@@ -86,6 +92,23 @@ def analyze_resume(resume_text: str, job_description: str) -> AnalysisResult:
         resume_sections=resume_sections,
         ats_warnings=ats_check.warnings,
     )
+    evidence = build_evidence(
+        resume_text=resume_text,
+        job_description=job_description,
+        resume_sections=resume_sections,
+        job_profile=job_profile,
+        matched_skills=matched_skills,
+        missing_skills=missing_skills,
+        priority_missing_skills=priority_missing_skills,
+        scores={
+            "skills": skills_score,
+            "keywords": keyword_score,
+            "semantic_similarity": semantic_score,
+            "experience": experience_score,
+            "ats": ats_check.score,
+        },
+        ats_warnings=ats_check.warnings,
+    )
 
     return AnalysisResult(
         summary=build_summary(overall, matched_skills, missing_skills),
@@ -98,6 +121,7 @@ def analyze_resume(resume_text: str, job_description: str) -> AnalysisResult:
             ats=ats_check.score,
         ),
         job_profile=job_profile,
+        evidence=evidence,
         matched_skills=matched_skills,
         missing_skills=missing_skills,
         priority_missing_skills=priority_missing_skills,
@@ -194,6 +218,20 @@ def extract_responsibilities(job_description: str, limit: int = 5) -> list[str]:
         return responsibilities[:limit]
 
     return split_sentences(job_description)[: min(limit, 3)]
+
+
+def find_sentences_with_terms(text: str, terms: list[str], limit: int = 4) -> list[str]:
+    evidence = []
+    normalized_terms = [term.lower() for term in terms if term]
+
+    for sentence in split_sentences(text):
+        cleaned_sentence = clean_text(sentence)
+        if any(term in cleaned_sentence for term in normalized_terms):
+            evidence.append(sentence.strip())
+        if len(evidence) >= limit:
+            break
+
+    return evidence
 
 
 def extract_keywords(text: str, limit: int = 20) -> list[str]:
@@ -375,6 +413,68 @@ def analyze_sections(
         result["skill_gap"] = "No major required skill gaps detected from the job description."
 
     return result
+
+
+def build_evidence(
+    resume_text: str,
+    job_description: str,
+    resume_sections: dict[str, str],
+    job_profile: JobProfile,
+    matched_skills: list[str],
+    missing_skills: list[str],
+    priority_missing_skills: list[str],
+    scores: dict[str, int],
+    ats_warnings: list[str],
+) -> AnalysisEvidence:
+    score_factors = [
+        f"Skills score is {scores['skills']} because the resume matches {len(matched_skills)} job skills and misses {len(missing_skills)}.",
+        f"Keyword score is {scores['keywords']} based on overlap between meaningful resume terms and job-description terms.",
+        f"Similarity score is {scores['semantic_similarity']} using local cosine similarity over cleaned resume and job text.",
+        f"Experience score is {scores['experience']} based on role-keyword overlap, action verbs, project evidence, and measurable impact.",
+        f"ATS score is {scores['ats']} based on section headers, detectable skills, contact details, length, and parser-friendly formatting checks.",
+    ]
+
+    resume_evidence = find_sentences_with_terms(resume_text, matched_skills, limit=4)
+    if not resume_evidence:
+        resume_evidence = [
+            content.splitlines()[0]
+            for section, content in resume_sections.items()
+            if section in {"summary", "skills", "projects", "experience"} and content
+        ][:4]
+
+    job_terms = job_profile.required_skills + job_profile.preferred_skills
+    job_evidence = find_sentences_with_terms(job_description, job_terms, limit=4)
+    if not job_evidence:
+        job_evidence = job_profile.responsibilities[:4]
+
+    recommendation_sources = []
+    if priority_missing_skills:
+        recommendation_sources.append(
+            "Priority gaps come from skills classified as required in the job description but not detected in the resume."
+        )
+    if missing_skills:
+        recommendation_sources.append(
+            "Missing-skill suggestions come from the job skill taxonomy after comparing required and preferred skills against the resume."
+        )
+    if matched_skills:
+        recommendation_sources.append(
+            "Matched-skill suggestions come from skills detected in both the resume and the target job description."
+        )
+    if ats_warnings:
+        recommendation_sources.append(
+            "ATS suggestions come from rule-based checks for section headers, contact details, resume length, skills visibility, and formatting risk."
+        )
+    if not resume_sections.get("summary"):
+        recommendation_sources.append(
+            "Summary advice appears when the parser cannot find a clear summary, profile, or objective section."
+        )
+
+    return AnalysisEvidence(
+        score_factors=score_factors,
+        resume_evidence=resume_evidence,
+        job_evidence=job_evidence,
+        recommendation_sources=recommendation_sources,
+    )
 
 
 def build_recommendations(

@@ -50,6 +50,7 @@ def test_analyze_text_endpoint_returns_structured_result():
     assert "typescript" not in body["priority_missing_skills"]
     assert body["job_profile"]["required_skills"]
     assert body["job_profile"]["preferred_skills"]
+    assert body["evidence"]["score_factors"]
 
 
 def test_analyze_text_endpoint_rejects_empty_input():

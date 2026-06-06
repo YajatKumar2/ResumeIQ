@@ -22,10 +22,18 @@ class JobProfile(BaseModel):
     responsibilities: list[str]
 
 
+class AnalysisEvidence(BaseModel):
+    score_factors: list[str]
+    resume_evidence: list[str]
+    job_evidence: list[str]
+    recommendation_sources: list[str]
+
+
 class AnalysisResult(BaseModel):
     summary: str
     scores: ScoreBreakdown
     job_profile: JobProfile
+    evidence: AnalysisEvidence
     matched_skills: list[str]
     missing_skills: list[str]
     priority_missing_skills: list[str]

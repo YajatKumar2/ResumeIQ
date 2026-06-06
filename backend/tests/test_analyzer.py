@@ -30,6 +30,8 @@ def test_analyzer_detects_matching_and_missing_skills():
     assert "python" in result.matched_skills
     assert "sql" in result.matched_skills
     assert "tableau" in result.missing_skills
+    assert result.evidence.score_factors
+    assert result.evidence.recommendation_sources
     assert result.recommendations
 
 
