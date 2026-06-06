@@ -26,11 +26,19 @@ export type AnalysisEvidence = {
   recommendation_sources: string[];
 };
 
+export type RewriteSuggestions = {
+  tailored_summary: string;
+  bullet_examples: string[];
+  skills_to_highlight: string[];
+  learning_focus: string[];
+};
+
 export type AnalysisResult = {
   summary: string;
   scores: ScoreBreakdown;
   job_profile: JobProfile;
   evidence: AnalysisEvidence;
+  rewrite_suggestions: RewriteSuggestions;
   matched_skills: string[];
   missing_skills: string[];
   priority_missing_skills: string[];

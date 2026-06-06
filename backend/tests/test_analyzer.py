@@ -32,6 +32,8 @@ def test_analyzer_detects_matching_and_missing_skills():
     assert "tableau" in result.missing_skills
     assert result.evidence.score_factors
     assert result.evidence.recommendation_sources
+    assert result.rewrite_suggestions.tailored_summary
+    assert result.rewrite_suggestions.bullet_examples
     assert result.recommendations
 
 

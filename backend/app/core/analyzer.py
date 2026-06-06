@@ -9,6 +9,7 @@ from backend.app.core.schemas import (
     AnalysisResult,
     AtsCheck,
     JobProfile,
+    RewriteSuggestions,
     ScoreBreakdown,
 )
 from backend.app.data.skills import ACTION_VERBS, SECTION_HEADERS, SKILL_ALIASES, STOPWORDS
@@ -109,6 +110,12 @@ def analyze_resume(resume_text: str, job_description: str) -> AnalysisResult:
         },
         ats_warnings=ats_check.warnings,
     )
+    rewrite_suggestions = build_rewrite_suggestions(
+        resume_sections=resume_sections,
+        job_profile=job_profile,
+        matched_skills=matched_skills,
+        priority_missing_skills=priority_missing_skills,
+    )
 
     return AnalysisResult(
         summary=build_summary(overall, matched_skills, missing_skills),
@@ -122,6 +129,7 @@ def analyze_resume(resume_text: str, job_description: str) -> AnalysisResult:
         ),
         job_profile=job_profile,
         evidence=evidence,
+        rewrite_suggestions=rewrite_suggestions,
         matched_skills=matched_skills,
         missing_skills=missing_skills,
         priority_missing_skills=priority_missing_skills,
@@ -475,6 +483,96 @@ def build_evidence(
         job_evidence=job_evidence,
         recommendation_sources=recommendation_sources,
     )
+
+
+def build_rewrite_suggestions(
+    resume_sections: dict[str, str],
+    job_profile: JobProfile,
+    matched_skills: list[str],
+    priority_missing_skills: list[str],
+) -> RewriteSuggestions:
+    role_focus = infer_role_focus(job_profile)
+    strongest_skills = matched_skills[:5]
+    skills_phrase = ", ".join(strongest_skills) if strongest_skills else "role-relevant tools"
+    project_signal = extract_project_signal(resume_sections)
+
+    tailored_summary = (
+        f"{role_focus} candidate with hands-on experience in {skills_phrase}. "
+        f"Strong background in {project_signal}, with a focus on applying technical skills to practical, job-relevant problems."
+    )
+
+    bullet_examples = build_bullet_examples(
+        role_focus=role_focus,
+        matched_skills=matched_skills,
+        responsibilities=job_profile.responsibilities,
+        project_signal=project_signal,
+    )
+
+    return RewriteSuggestions(
+        tailored_summary=tailored_summary,
+        bullet_examples=bullet_examples,
+        skills_to_highlight=strongest_skills,
+        learning_focus=priority_missing_skills[:5],
+    )
+
+
+def infer_role_focus(job_profile: JobProfile) -> str:
+    combined = " ".join(job_profile.responsibilities + job_profile.required_skills).lower()
+    if any(term in combined for term in ("data", "analytics", "dashboard", "reporting")):
+        return "Data analyst"
+    if any(term in combined for term in ("frontend", "react", "ui", "javascript")):
+        return "Frontend developer"
+    if any(term in combined for term in ("backend", "api", "database", "fastapi")):
+        return "Backend developer"
+    if any(term in combined for term in ("machine learning", "nlp", "model")):
+        return "Machine learning"
+    return "Early-career technology"
+
+
+def extract_project_signal(resume_sections: dict[str, str]) -> str:
+    project_text = resume_sections.get("projects") or resume_sections.get("experience") or ""
+    project_skills = sorted(extract_skills(clean_text(project_text)))
+    if project_skills:
+        return ", ".join(project_skills[:4])
+
+    if project_text:
+        first_line = project_text.splitlines()[0].strip()
+        if first_line:
+            return first_line.lower()
+
+    return "projects, coursework, and problem solving"
+
+
+def build_bullet_examples(
+    role_focus: str,
+    matched_skills: list[str],
+    responsibilities: list[str],
+    project_signal: str,
+) -> list[str]:
+    primary_skill = matched_skills[0] if matched_skills else "role-relevant tools"
+    secondary_skill = matched_skills[1] if len(matched_skills) > 1 else "technical problem solving"
+    responsibility = select_action_responsibility(responsibilities)
+
+    return [
+        f"Built a {role_focus.lower()} project using {primary_skill} and {secondary_skill} to solve a practical requirement aligned with the target role.",
+        f"Applied {project_signal} to {responsibility}.",
+        "Improved resume impact by describing project outcomes with measurable details such as records processed, accuracy, time saved, users supported, or reporting speed.",
+    ]
+
+
+def select_action_responsibility(responsibilities: list[str]) -> str:
+    fallback = "support role-specific project work"
+    boilerplate_markers = ("we are hiring", "we need", "ideal candidate", "candidate should")
+
+    for responsibility in responsibilities:
+        cleaned = responsibility.strip().rstrip(".")
+        lowered = cleaned.lower()
+        if not cleaned or any(marker in lowered for marker in boilerplate_markers):
+            continue
+        cleaned = re.sub(r"^responsibilities include\s+", "", cleaned, flags=re.IGNORECASE)
+        return cleaned[0].lower() + cleaned[1:]
+
+    return fallback
 
 
 def build_recommendations(

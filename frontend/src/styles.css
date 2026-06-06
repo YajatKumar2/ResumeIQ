@@ -373,6 +373,25 @@ h1 {
   margin-top: 3px;
 }
 
+.rewrite-block {
+  border-left: 3px solid #1f6f8b;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  padding: 14px;
+}
+
+.rewrite-block strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.rewrite-block p {
+  color: #34465f;
+  line-height: 1.55;
+  margin-bottom: 0;
+}
+
 .ats-summary {
   display: flex;
   align-items: baseline;

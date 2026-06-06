@@ -260,6 +260,18 @@ function Results({ analysis }: { analysis: AnalysisResult }) {
         </ul>
       </Panel>
 
+      <Panel icon={<ArrowRight size={20} />} title="Rewrite Suggestions">
+        <div className="rewrite-block">
+          <strong>Tailored summary</strong>
+          <p>{analysis.rewrite_suggestions.tailored_summary}</p>
+        </div>
+        <div className="stacked-list">
+          <ListBlock title="Bullet examples" items={analysis.rewrite_suggestions.bullet_examples} />
+          <ListBlock title="Skills to highlight" items={analysis.rewrite_suggestions.skills_to_highlight} />
+          <ListBlock title="Learning focus" items={analysis.rewrite_suggestions.learning_focus} />
+        </div>
+      </Panel>
+
       <Panel icon={<FileText size={20} />} title="Analysis Evidence">
         <div className="stacked-list">
           <ListBlock title="Score reasoning" items={analysis.evidence.score_factors} />

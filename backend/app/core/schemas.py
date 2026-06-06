@@ -29,11 +29,19 @@ class AnalysisEvidence(BaseModel):
     recommendation_sources: list[str]
 
 
+class RewriteSuggestions(BaseModel):
+    tailored_summary: str
+    bullet_examples: list[str]
+    skills_to_highlight: list[str]
+    learning_focus: list[str]
+
+
 class AnalysisResult(BaseModel):
     summary: str
     scores: ScoreBreakdown
     job_profile: JobProfile
     evidence: AnalysisEvidence
+    rewrite_suggestions: RewriteSuggestions
     matched_skills: list[str]
     missing_skills: list[str]
     priority_missing_skills: list[str]
