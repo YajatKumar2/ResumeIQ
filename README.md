@@ -50,7 +50,22 @@ pip install -r requirements.txt
 Run tests:
 
 ```bash
-pytest
+python -m pytest
+```
+
+If `pytest` uses Anaconda instead of the project virtual environment, run:
+
+```bash
+conda deactivate
+source .venv/bin/activate
+which python
+python -m pytest
+```
+
+`which python` should point to:
+
+```text
+/Users/yajatchowdary/Documents/ResumeIQ/.venv/bin/python
 ```
 
 Run a sample analysis:
