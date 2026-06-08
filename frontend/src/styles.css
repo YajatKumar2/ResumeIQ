@@ -260,10 +260,31 @@ h1 {
   color: #1f6f8b;
 }
 
-.score-panel p:last-child {
+.score-copy {
+  display: grid;
+  gap: 14px;
+}
+
+.score-copy p {
   margin-bottom: 0;
   color: #34465f;
   line-height: 1.55;
+}
+
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 38px;
+  color: #1f6f8b;
+  background: #e7f4f8;
+  border: 1px solid #b7d9e3;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 12px;
 }
 
 .breakdown-panel {

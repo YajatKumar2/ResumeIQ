@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   ClipboardCheck,
+  Download,
   FileText,
   Gauge,
   Loader2,
@@ -199,6 +200,19 @@ function EmptyState({ hasInput }: { hasInput: boolean }) {
 }
 
 function Results({ analysis }: { analysis: AnalysisResult }) {
+  function handleDownloadReport() {
+    const report = buildMarkdownReport(analysis);
+    const blob = new Blob([report], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `resumeiq-analysis-${new Date().toISOString().slice(0, 10)}.md`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="results-grid">
       <section className="score-panel">
@@ -206,7 +220,13 @@ function Results({ analysis }: { analysis: AnalysisResult }) {
           <p className="eyebrow">Overall Match</p>
           <strong>{analysis.scores.overall}</strong>
         </div>
-        <p>{analysis.summary}</p>
+        <div className="score-copy">
+          <p>{analysis.summary}</p>
+          <button className="download-button" onClick={handleDownloadReport} type="button">
+            <Download size={17} />
+            Download Report
+          </button>
+        </div>
       </section>
 
       <section className="breakdown-panel">
@@ -368,4 +388,85 @@ function formatLabel(value: string) {
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function buildMarkdownReport(analysis: AnalysisResult) {
+  const lines = [
+    "# ResumeIQ Analysis Report",
+    "",
+    `Generated: ${new Date().toLocaleString()}`,
+    "",
+    "## Overall Fit",
+    "",
+    `Score: ${analysis.scores.overall}/100`,
+    "",
+    analysis.summary,
+    "",
+    "## Score Breakdown",
+    "",
+    `- Skills: ${analysis.scores.skills}/100`,
+    `- Keywords: ${analysis.scores.keywords}/100`,
+    `- Similarity: ${analysis.scores.semantic_similarity}/100`,
+    `- Experience: ${analysis.scores.experience}/100`,
+    `- ATS: ${analysis.scores.ats}/100`,
+    "",
+    "## Matched Skills",
+    "",
+    listForReport(analysis.matched_skills),
+    "",
+    "## Missing Skills",
+    "",
+    listForReport(analysis.missing_skills),
+    "",
+    "## Priority Gaps",
+    "",
+    listForReport(analysis.priority_missing_skills),
+    "",
+    "## Recommendations",
+    "",
+    listForReport(analysis.recommendations),
+    "",
+    "## Rewrite Suggestions",
+    "",
+    "### Tailored Summary",
+    "",
+    analysis.rewrite_suggestions.tailored_summary,
+    "",
+    "### Bullet Examples",
+    "",
+    listForReport(analysis.rewrite_suggestions.bullet_examples),
+    "",
+    "## ATS Readiness",
+    "",
+    `ATS Score: ${analysis.ats.score}/100`,
+    "",
+    "### Strengths",
+    "",
+    listForReport(analysis.ats.strengths),
+    "",
+    "### Warnings",
+    "",
+    listForReport(analysis.ats.warnings),
+    "",
+    "## Analysis Evidence",
+    "",
+    "### Score Reasoning",
+    "",
+    listForReport(analysis.evidence.score_factors),
+    "",
+    "### Resume Signals",
+    "",
+    listForReport(analysis.evidence.resume_evidence),
+    "",
+    "### Job Description Signals",
+    "",
+    listForReport(analysis.evidence.job_evidence),
+  ];
+
+  return `${lines.join("\n")}\n`;
+}
+
+function listForReport(items: string[]) {
+  if (!items.length) return "- None detected.";
+  return items.map((item) => `- ${item}`).join("\n");
 }
