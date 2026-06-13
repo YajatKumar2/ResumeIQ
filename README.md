@@ -47,10 +47,33 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Install frontend dependencies:
+
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+You can also use the project shortcuts:
+
+```bash
+make setup
+make test
+make backend
+make frontend
+```
+
 Run tests:
 
 ```bash
 python -m pytest
+```
+
+Or:
+
+```bash
+make test
 ```
 
 If `pytest` uses Anaconda instead of the project virtual environment, run:
@@ -74,16 +97,34 @@ Run a sample analysis:
 python backend/scripts/analyze_sample.py
 ```
 
+Or:
+
+```bash
+make sample
+```
+
 Run the calibration examples:
 
 ```bash
 python backend/scripts/evaluate_samples.py
 ```
 
+Or:
+
+```bash
+make calibrate
+```
+
 Start the backend:
 
 ```bash
-uvicorn backend.app.main:app --reload
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+```
+
+Or:
+
+```bash
+make backend
 ```
 
 Open the API docs at:
@@ -98,6 +139,18 @@ Start the frontend:
 cd frontend
 npm install
 npm run dev
+```
+
+Or:
+
+```bash
+make frontend
+```
+
+Run the full local verification:
+
+```bash
+make verify
 ```
 
 Open the app at:
