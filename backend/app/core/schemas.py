@@ -16,6 +16,14 @@ class AtsCheck(BaseModel):
     warnings: list[str]
 
 
+class ContactInfo(BaseModel):
+    email: str | None = None
+    phone: str | None = None
+    linkedin: str | None = None
+    github: str | None = None
+    location: str | None = None
+
+
 class JobProfile(BaseModel):
     required_skills: list[str]
     preferred_skills: list[str]
@@ -39,6 +47,7 @@ class RewriteSuggestions(BaseModel):
 class AnalysisResult(BaseModel):
     summary: str
     scores: ScoreBreakdown
+    contact_info: ContactInfo
     job_profile: JobProfile
     evidence: AnalysisEvidence
     rewrite_suggestions: RewriteSuggestions

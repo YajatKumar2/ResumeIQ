@@ -1,5 +1,8 @@
 Alex Kumar
 alex.kumar@example.com
+Bengaluru, India
+https://www.linkedin.com/in/alexkumar
+https://github.com/alexkumar
 
 Summary
 Data analyst and computer science student with hands-on experience building Python dashboards, SQL reports, and data cleaning workflows.

@@ -22,3 +22,26 @@ export async function analyzeUpload(
 
   return response.json();
 }
+
+export async function analyzeText(
+  resumeText: string,
+  jobDescription: string,
+): Promise<AnalysisResult> {
+  const response = await fetch(`${API_BASE_URL}/analyze-text`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      resume_text: resumeText,
+      job_description: jobDescription,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.detail ?? "Resume analysis failed.");
+  }
+
+  return response.json();
+}

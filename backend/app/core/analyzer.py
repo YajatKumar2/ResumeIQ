@@ -8,6 +8,7 @@ from backend.app.core.schemas import (
     AnalysisEvidence,
     AnalysisResult,
     AtsCheck,
+    ContactInfo,
     JobProfile,
     RewriteSuggestions,
     ScoreBreakdown,
@@ -18,6 +19,9 @@ from backend.app.data.skills import ACTION_VERBS, SECTION_HEADERS, SKILL_ALIASES
 TOKEN_PATTERN = re.compile(r"[a-zA-Z][a-zA-Z0-9+#.\-]*")
 EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w.-]+\.\w+")
 URL_PATTERN = re.compile(r"https?://\S+|www\.\S+")
+PHONE_PATTERN = re.compile(r"(?:\+?\d[\s().-]*){10,15}")
+LINKEDIN_PATTERN = re.compile(r"(?:https?://)?(?:www\.)?linkedin\.com/[^\s,;]+", re.IGNORECASE)
+GITHUB_PATTERN = re.compile(r"(?:https?://)?(?:www\.)?github\.com/[^\s,;]+", re.IGNORECASE)
 REQUIRED_MARKERS = {
     "required",
     "requirement",
@@ -56,6 +60,7 @@ def analyze_resume(resume_text: str, job_description: str) -> AnalysisResult:
     cleaned_job = clean_text(job_description)
 
     resume_sections = split_resume_sections(resume_text)
+    contact_info = extract_contact_info(resume_text)
     resume_skills = extract_skills(cleaned_resume)
     job_profile = extract_job_profile(job_description)
     job_skills = set(job_profile.required_skills) | set(job_profile.preferred_skills)
@@ -127,6 +132,7 @@ def analyze_resume(resume_text: str, job_description: str) -> AnalysisResult:
             experience=experience_score,
             ats=ats_check.score,
         ),
+        contact_info=contact_info,
         job_profile=job_profile,
         evidence=evidence,
         rewrite_suggestions=rewrite_suggestions,
@@ -173,6 +179,42 @@ def extract_skills(text: str) -> set[str]:
                 break
 
     return found
+
+
+def extract_contact_info(text: str) -> ContactInfo:
+    email_match = EMAIL_PATTERN.search(text)
+    phone_match = PHONE_PATTERN.search(text)
+    linkedin_match = LINKEDIN_PATTERN.search(text)
+    github_match = GITHUB_PATTERN.search(text)
+
+    return ContactInfo(
+        email=email_match.group(0) if email_match else None,
+        phone=normalize_phone(phone_match.group(0)) if phone_match else None,
+        linkedin=normalize_url(linkedin_match.group(0)) if linkedin_match else None,
+        github=normalize_url(github_match.group(0)) if github_match else None,
+        location=extract_location_signal(text),
+    )
+
+
+def normalize_url(value: str) -> str:
+    value = value.rstrip(".,)")
+    if value.startswith(("http://", "https://")):
+        return value
+    return f"https://{value}"
+
+
+def normalize_phone(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip(" .,-()")
+
+
+def extract_location_signal(text: str) -> str | None:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    for line in lines[:6]:
+        if EMAIL_PATTERN.search(line) or PHONE_PATTERN.search(line) or URL_PATTERN.search(line):
+            continue
+        if "," in line and len(line.split()) <= 6:
+            return line
+    return None
 
 
 def extract_job_profile(job_description: str) -> JobProfile:

@@ -12,7 +12,7 @@ import {
   Upload,
 } from "lucide-react";
 import { ChangeEvent, FormEvent, useMemo, useRef, useState } from "react";
-import { analyzeUpload } from "./api";
+import { analyzeText, analyzeUpload } from "./api";
 import type { AnalysisResult } from "./types";
 
 const scoreItems = [
@@ -25,6 +25,28 @@ const scoreItems = [
 
 const maxFileSizeBytes = 5 * 1024 * 1024;
 const supportedExtensions = [".pdf", ".docx", ".txt"];
+type ResumeInputMode = "paste" | "upload";
+
+const sampleResumeText = `Priya Sharma
+priya.sharma@example.com
+Bengaluru, India
+
+Summary
+Computer science student with hands-on experience building web applications and data-driven dashboards using Python, SQL, JavaScript, and React.
+
+Skills
+Python, SQL, JavaScript, React, HTML, CSS, Git, Excel, Data Analysis
+
+Projects
+Student Performance Dashboard
+Built a dashboard using Python, SQL, and Excel to analyze academic performance data for 5,000 student records. Created charts to identify attendance and score trends.
+
+Portfolio Web App
+Developed a responsive personal portfolio using React, JavaScript, HTML, and CSS. Added project cards, contact form, and mobile-friendly layout.
+
+Education
+B.Tech in Computer Science`;
+
 const sampleJobDescription = `We are hiring a Junior Data Analyst to support business reporting and data-driven decision-making. The ideal candidate should have strong skills in Python, SQL, Excel, and Pandas, with experience cleaning datasets, analyzing trends, and preparing reports or dashboards.
 
 Responsibilities include collecting and cleaning data, writing SQL queries, building dashboards, identifying business insights, and explaining findings to non-technical stakeholders.
@@ -36,19 +58,26 @@ Preferred skills:
 Tableau, Power BI, machine learning, statistics, communication, Git`;
 
 export function App() {
+  const [resumeInputMode, setResumeInputMode] = useState<ResumeInputMode>("upload");
   const [resume, setResume] = useState<File | null>(null);
+  const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const canAnalyze = Boolean(resume && jobDescription.trim() && !isLoading);
+  const hasResumeInput = resumeInputMode === "upload" ? Boolean(resume) : Boolean(resumeText.trim());
+  const canAnalyze = Boolean(hasResumeInput && jobDescription.trim() && !isLoading);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!resume) {
+    if (resumeInputMode === "upload" && !resume) {
       setError("Upload a resume file before analyzing.");
+      return;
+    }
+    if (resumeInputMode === "paste" && !resumeText.trim()) {
+      setError("Paste resume text before analyzing.");
       return;
     }
     if (!jobDescription.trim()) {
@@ -60,7 +89,10 @@ export function App() {
     setError("");
 
     try {
-      const result = await analyzeUpload(resume, jobDescription);
+      const result =
+        resumeInputMode === "upload"
+          ? await analyzeUpload(resume as File, jobDescription)
+          : await analyzeText(resumeText, jobDescription);
       setAnalysis(result);
     } catch (caughtError) {
       setAnalysis(null);
@@ -99,6 +131,7 @@ export function App() {
 
   function handleReset() {
     setResume(null);
+    setResumeText("");
     setJobDescription("");
     setAnalysis(null);
     setError("");
@@ -111,6 +144,12 @@ export function App() {
     if (!resume) return "PDF, DOCX, or TXT up to 5 MB";
     return `${resume.name} • ${(resume.size / 1024).toFixed(1)} KB`;
   }, [resume]);
+
+  function handleModeChange(mode: ResumeInputMode) {
+    setResumeInputMode(mode);
+    setError("");
+    setAnalysis(null);
+  }
 
   return (
     <main className="app-shell">
@@ -134,17 +173,56 @@ export function App() {
             </button>
           </div>
 
-          <label className="upload-zone">
-            <input
-              accept=".pdf,.docx,.txt"
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-            />
-            <Upload size={24} />
-            <span>Upload Resume</span>
-            <small>{fileLabel}</small>
-          </label>
+          <div className="segmented-control" aria-label="Resume input mode">
+            <button
+              className={resumeInputMode === "upload" ? "active" : ""}
+              onClick={() => handleModeChange("upload")}
+              type="button"
+            >
+              <Upload size={16} />
+              Upload
+            </button>
+            <button
+              className={resumeInputMode === "paste" ? "active" : ""}
+              onClick={() => handleModeChange("paste")}
+              type="button"
+            >
+              <FileText size={16} />
+              Paste Text
+            </button>
+          </div>
+
+          {resumeInputMode === "upload" ? (
+            <label className="upload-zone">
+              <input
+                accept=".pdf,.docx,.txt"
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileChange}
+              />
+              <Upload size={24} />
+              <span>Upload Resume</span>
+              <small>{fileLabel}</small>
+            </label>
+          ) : (
+            <label className="resume-text-input">
+              <span>
+                Resume Text
+                <button
+                  className="text-button"
+                  onClick={() => setResumeText(sampleResumeText)}
+                  type="button"
+                >
+                  Use sample
+                </button>
+              </span>
+              <textarea
+                value={resumeText}
+                onChange={(event) => setResumeText(event.target.value)}
+                placeholder="Paste extracted resume text here..."
+              />
+            </label>
+          )}
 
           <label className="job-input">
             <span>
@@ -179,7 +257,11 @@ export function App() {
       </section>
 
       <section className="results-area">
-        {analysis ? <Results analysis={analysis} /> : <EmptyState hasInput={Boolean(resume || jobDescription)} />}
+        {analysis ? (
+          <Results analysis={analysis} />
+        ) : (
+          <EmptyState hasInput={Boolean(resume || resumeText || jobDescription)} />
+        )}
       </section>
     </main>
   );
@@ -240,6 +322,16 @@ function Results({ analysis }: { analysis: AnalysisResult }) {
           </div>
         ))}
       </section>
+
+      <Panel icon={<FileText size={20} />} title="Contact Info">
+        <div className="contact-grid">
+          <ContactItem label="Email" value={analysis.contact_info.email} />
+          <ContactItem label="Phone" value={analysis.contact_info.phone} />
+          <ContactItem label="LinkedIn" value={analysis.contact_info.linkedin} />
+          <ContactItem label="GitHub" value={analysis.contact_info.github} />
+          <ContactItem label="Location" value={analysis.contact_info.location} />
+        </div>
+      </Panel>
 
       <Panel icon={<BadgeCheck size={20} />} title="Matched Skills">
         <TagList items={analysis.matched_skills} emptyText="No direct matches detected yet." tone="good" />
@@ -383,6 +475,15 @@ function ListBlock({ items, title }: { items: string[]; title: string }) {
   );
 }
 
+function ContactItem({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div className="contact-item">
+      <span>{label}</span>
+      <strong>{value ?? "Not detected"}</strong>
+    </div>
+  );
+}
+
 function formatLabel(value: string) {
   return value
     .split("_")
@@ -421,6 +522,14 @@ function buildMarkdownReport(analysis: AnalysisResult) {
     "## Priority Gaps",
     "",
     listForReport(analysis.priority_missing_skills),
+    "",
+    "## Contact Info",
+    "",
+    `- Email: ${analysis.contact_info.email ?? "Not detected"}`,
+    `- Phone: ${analysis.contact_info.phone ?? "Not detected"}`,
+    `- LinkedIn: ${analysis.contact_info.linkedin ?? "Not detected"}`,
+    `- GitHub: ${analysis.contact_info.github ?? "Not detected"}`,
+    `- Location: ${analysis.contact_info.location ?? "Not detected"}`,
     "",
     "## Recommendations",
     "",

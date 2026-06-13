@@ -20,6 +20,8 @@ def test_analyze_text_endpoint_returns_structured_result():
             "resume_text": """
             Priya Sharma
             priya@example.com
+            Bengaluru, India
+            https://github.com/priyasharma
 
             Summary
             Frontend developer with React and JavaScript project experience.
@@ -45,6 +47,8 @@ def test_analyze_text_endpoint_returns_structured_result():
 
     assert response.status_code == 200
     assert body["scores"]["overall"] > 50
+    assert body["contact_info"]["email"] == "priya@example.com"
+    assert body["contact_info"]["github"] == "https://github.com/priyasharma"
     assert "react" in body["matched_skills"]
     assert "typescript" in body["missing_skills"]
     assert "typescript" not in body["priority_missing_skills"]

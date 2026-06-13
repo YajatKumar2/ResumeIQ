@@ -19,6 +19,14 @@ export type AtsCheck = {
   warnings: string[];
 };
 
+export type ContactInfo = {
+  email: string | null;
+  phone: string | null;
+  linkedin: string | null;
+  github: string | null;
+  location: string | null;
+};
+
 export type AnalysisEvidence = {
   score_factors: string[];
   resume_evidence: string[];
@@ -36,6 +44,7 @@ export type RewriteSuggestions = {
 export type AnalysisResult = {
   summary: string;
   scores: ScoreBreakdown;
+  contact_info: ContactInfo;
   job_profile: JobProfile;
   evidence: AnalysisEvidence;
   rewrite_suggestions: RewriteSuggestions;

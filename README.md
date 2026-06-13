@@ -5,6 +5,7 @@ ResumeIQ is a web-based AI resume analysis platform that compares a resume again
 The first version focuses on the core intelligence layer:
 
 - Extract resume text from PDF, DOCX, or TXT files.
+- Analyze either uploaded resumes or directly pasted resume text.
 - Accept resume uploads up to 5 MB.
 - Parse resume sections such as summary, skills, education, experience, and projects.
 - Extract role-specific skills and keywords from a job description.

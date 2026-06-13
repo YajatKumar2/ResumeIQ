@@ -27,6 +27,7 @@ def test_analyzer_detects_matching_and_missing_skills():
     result = analyze_resume(resume, job)
 
     assert result.scores.overall > 40
+    assert result.contact_info.email == "alex@example.com"
     assert "python" in result.matched_skills
     assert "sql" in result.matched_skills
     assert "tableau" in result.missing_skills

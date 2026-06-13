@@ -116,6 +116,35 @@ h1 {
   padding: 0;
 }
 
+.segmented-control {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  background: #eef2f6;
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.segmented-control button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  color: #607089;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.segmented-control button.active {
+  color: #172033;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(23, 32, 51, 0.12);
+}
+
 .upload-zone {
   display: grid;
   gap: 8px;
@@ -142,7 +171,8 @@ h1 {
   font-weight: 700;
 }
 
-.job-input span {
+.job-input span,
+.resume-text-input span {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -154,14 +184,15 @@ h1 {
   overflow-wrap: anywhere;
 }
 
-.job-input {
+.job-input,
+.resume-text-input {
   display: grid;
   gap: 8px;
 }
 
-.job-input textarea {
+.job-input textarea,
+.resume-text-input textarea {
   width: 100%;
-  min-height: 260px;
   resize: vertical;
   border: 1px solid #c9d2df;
   border-radius: 8px;
@@ -170,7 +201,16 @@ h1 {
   line-height: 1.5;
 }
 
+.job-input textarea {
+  min-height: 260px;
+}
+
+.resume-text-input textarea {
+  min-height: 220px;
+}
+
 .job-input textarea:focus,
+.resume-text-input textarea:focus,
 .upload-zone:focus-within {
   outline: 3px solid #c7e4ef;
   border-color: #1f6f8b;
@@ -352,6 +392,30 @@ h1 {
 .tag.critical {
   color: #8a2d2d;
   background: #fff1f1;
+}
+
+.contact-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.contact-item {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.contact-item span {
+  color: #607089;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.contact-item strong {
+  color: #172033;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
 .stacked-list,
