@@ -14,6 +14,7 @@ from backend.app.core.schemas import (
     ScoreBreakdown,
 )
 from backend.app.data.skills import ACTION_VERBS, SECTION_HEADERS, SKILL_ALIASES, STOPWORDS
+from backend.app.services.llm_service import enhance_rewrite_suggestions
 
 
 TOKEN_PATTERN = re.compile(r"[a-zA-Z][a-zA-Z0-9+#.\-]*")
@@ -117,6 +118,12 @@ def analyze_resume(resume_text: str, job_description: str) -> AnalysisResult:
     )
     rewrite_suggestions = build_rewrite_suggestions(
         resume_sections=resume_sections,
+        job_profile=job_profile,
+        matched_skills=matched_skills,
+        priority_missing_skills=priority_missing_skills,
+    )
+    rewrite_suggestions = enhance_rewrite_suggestions(
+        local_suggestions=rewrite_suggestions,
         job_profile=job_profile,
         matched_skills=matched_skills,
         priority_missing_skills=priority_missing_skills,

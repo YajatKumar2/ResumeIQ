@@ -12,6 +12,7 @@ The first version focuses on the core intelligence layer:
 - Separate likely required skills from preferred/nice-to-have skills.
 - Score resume-to-job alignment using local NLP-style methods.
 - Generate targeted suggestions without paid APIs.
+- Optionally prepare for LLM-enhanced rewrite suggestions while keeping local rules as the default fallback.
 - Provide ATS-readiness checks for machine readability and recruiter clarity.
 
 ## Project Structure
@@ -47,6 +48,24 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+Create optional local environment settings when needed:
+
+```bash
+cp .env.example .env
+```
+
+By default, `USE_LLM=false`, so ResumeIQ works fully without any API key.
+
+Optional NVIDIA/OpenAI-compatible rewrite enhancement:
+
+```bash
+USE_LLM=true
+NVIDIA_API_KEY=your_key_here
+NVIDIA_MODEL=your_model_here
+```
+
+Only rewrite suggestions are API-enhanced. Scoring, ATS checks, skill matching, and evidence remain local.
 
 Install frontend dependencies:
 

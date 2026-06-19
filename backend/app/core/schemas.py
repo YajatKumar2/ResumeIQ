@@ -38,6 +38,7 @@ class AnalysisEvidence(BaseModel):
 
 
 class RewriteSuggestions(BaseModel):
+    source: str = "local_rules"
     tailored_summary: str
     bullet_examples: list[str]
     skills_to_highlight: list[str]

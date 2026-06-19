@@ -35,6 +35,7 @@ export type AnalysisEvidence = {
 };
 
 export type RewriteSuggestions = {
+  source: string;
   tailored_summary: string;
   bullet_examples: string[];
   skills_to_highlight: string[];

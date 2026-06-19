@@ -43,3 +43,11 @@ ResumeIQ generates a tailored summary, example bullet rewrites, skills to highli
 ## Where A Free API Could Improve It
 
 A free LLM/API could be added later as an optional enhancement. The local engine should still remain the core. A model could improve summary rewrites, bullet rewrites, tone, grammar, and job-specific phrasing. The safest design is to send the local analysis result to the model, not raw files alone, so the model improves wording while ResumeIQ keeps control of scoring and evidence.
+
+## Optional LLM Boundary
+
+The project now has an optional LLM service boundary. By default, `USE_LLM=false`, so rewrite suggestions come from local rules. If an API is added later, it should only enhance rewrite wording and should not control scoring, ATS checks, matched skills, missing skills, or evidence.
+
+NVIDIA documents hosted NIM endpoints for prototyping and lists LLM chat-completion APIs in its API documentation: https://docs.api.nvidia.com/. ResumeIQ keeps this integration optional through `.env` settings so the app remains usable without an API key.
+
+When enabled, the service calls an OpenAI-compatible `/chat/completions` endpoint and asks for strict JSON containing only an improved summary and bullet examples. If the key, model, network, or response format fails, ResumeIQ falls back to local rewrite suggestions.

@@ -373,6 +373,7 @@ function Results({ analysis }: { analysis: AnalysisResult }) {
       </Panel>
 
       <Panel icon={<ArrowRight size={20} />} title="Rewrite Suggestions">
+        <div className="source-pill">{formatSource(analysis.rewrite_suggestions.source)}</div>
         <div className="rewrite-block">
           <strong>Tailored summary</strong>
           <p>{analysis.rewrite_suggestions.tailored_summary}</p>
@@ -491,6 +492,13 @@ function formatLabel(value: string) {
     .join(" ");
 }
 
+function formatSource(value: string) {
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function buildMarkdownReport(analysis: AnalysisResult) {
   const lines = [
     "# ResumeIQ Analysis Report",
@@ -536,6 +544,8 @@ function buildMarkdownReport(analysis: AnalysisResult) {
     listForReport(analysis.recommendations),
     "",
     "## Rewrite Suggestions",
+    "",
+    `Source: ${formatSource(analysis.rewrite_suggestions.source)}`,
     "",
     "### Tailored Summary",
     "",
