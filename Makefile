@@ -1,7 +1,7 @@
 PYTHON := .venv/bin/python
 PIP := .venv/bin/pip
 
-.PHONY: help setup test backend frontend build sample calibrate verify
+.PHONY: help setup test backend frontend build sample calibrate llm-status verify
 
 help:
 	@echo "ResumeIQ commands:"
@@ -12,6 +12,7 @@ help:
 	@echo "  make build      Build the frontend"
 	@echo "  make sample     Run sample resume analysis"
 	@echo "  make calibrate  Run scoring calibration examples"
+	@echo "  make llm-status Show optional LLM configuration status"
 	@echo "  make verify     Run tests, calibration, and frontend build"
 
 setup:
@@ -36,5 +37,8 @@ sample:
 
 calibrate:
 	$(PYTHON) backend/scripts/evaluate_samples.py
+
+llm-status:
+	$(PYTHON) backend/scripts/check_llm_config.py
 
 verify: test calibrate build

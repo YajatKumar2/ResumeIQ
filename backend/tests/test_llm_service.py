@@ -2,6 +2,7 @@ from backend.app.core.schemas import JobProfile, RewriteSuggestions
 from backend.app.services.llm_service import (
     build_rewrite_prompt,
     enhance_rewrite_suggestions,
+    get_llm_config_summary,
     get_llm_provider_status,
     parse_rewrite_response,
 )
@@ -50,6 +51,18 @@ def test_llm_enabled_without_key_falls_back(monkeypatch):
 
     assert enhanced.source == "local_fallback_missing_key"
     assert enhanced.tailored_summary == "Local summary"
+
+
+def test_llm_config_summary_hides_key(monkeypatch):
+    monkeypatch.setenv("USE_LLM", "true")
+    monkeypatch.setenv("NVIDIA_API_KEY", "secret-key")
+    monkeypatch.setenv("NVIDIA_MODEL", "nvidia/llama-3.1-nemotron-nano-8b-v1")
+
+    summary = get_llm_config_summary()
+
+    assert summary["status"] == "llm_configured"
+    assert summary["has_api_key"] is True
+    assert "secret-key" not in str(summary)
 
 
 def test_rewrite_prompt_keeps_truthfulness_guardrails():

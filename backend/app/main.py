@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.core.analyzer import analyze_resume
 from backend.app.core.parser import MAX_UPLOAD_SIZE_BYTES, SUPPORTED_EXTENSIONS, extract_text_from_file
 from backend.app.core.schemas import AnalysisResult, TextAnalysisRequest
+from backend.app.services.llm_service import get_llm_config_summary
 
 
 app = FastAPI(
@@ -27,6 +28,11 @@ app.add_middleware(
 @app.get("/health")
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/llm-status")
+def llm_status() -> dict[str, str | bool]:
+    return get_llm_config_summary()
 
 
 @app.post("/analyze-text", response_model=AnalysisResult)

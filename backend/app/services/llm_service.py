@@ -5,10 +5,14 @@ import os
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from dotenv import load_dotenv
+
 from backend.app.core.schemas import JobProfile, RewriteSuggestions
 
 
 DEFAULT_NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+
+load_dotenv()
 
 
 def is_llm_enabled() -> bool:
@@ -23,6 +27,17 @@ def get_llm_provider_status() -> str:
     if not os.getenv("NVIDIA_MODEL"):
         return "local_fallback_missing_model"
     return "llm_configured"
+
+
+def get_llm_config_summary() -> dict[str, str | bool]:
+    return {
+        "enabled": is_llm_enabled(),
+        "status": get_llm_provider_status(),
+        "provider": "nvidia_openai_compatible",
+        "base_url": os.getenv("NVIDIA_BASE_URL", DEFAULT_NVIDIA_BASE_URL),
+        "model": os.getenv("NVIDIA_MODEL", ""),
+        "has_api_key": bool(os.getenv("NVIDIA_API_KEY")),
+    }
 
 
 def enhance_rewrite_suggestions(

@@ -13,6 +13,21 @@ def test_health_check():
     assert response.json() == {"status": "ok"}
 
 
+def test_llm_status_does_not_expose_api_key(monkeypatch):
+    monkeypatch.setenv("USE_LLM", "true")
+    monkeypatch.setenv("NVIDIA_API_KEY", "secret-key")
+    monkeypatch.setenv("NVIDIA_MODEL", "nvidia/llama-3.1-nemotron-nano-8b-v1")
+
+    response = client.get("/llm-status")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["enabled"] is True
+    assert body["status"] == "llm_configured"
+    assert body["has_api_key"] is True
+    assert "secret-key" not in str(body)
+
+
 def test_analyze_text_endpoint_returns_structured_result():
     response = client.post(
         "/analyze-text",
